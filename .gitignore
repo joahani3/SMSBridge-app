@@ -1,0 +1,35 @@
+# Built outputs
+*.apk
+*.aab
+*.ap_
+*.dex
+bin/
+build/
+out/
+
+# Gradle
+.gradle/
+gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.jar
+
+# Local config (contains SDK path, signing keys — never commit)
+local.properties
+*.keystore
+*.jks
+
+# IDE
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Google Services — contains API keys, DO NOT commit
+google-services.json
+
+# Logs
+*.log
+logs/
+
+# Claude launcher scripts (dev tooling, not project source)
+claude_here*.bat
+set

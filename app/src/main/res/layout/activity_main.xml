@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- 헤더: 앱 타이틀 + 현재 계정 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="SMS 브릿지 설정"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:paddingTop="8dp"
+            android:paddingBottom="4dp" />
+
+        <TextView
+            android:id="@+id/tv_current_user"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="계정: -"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:textColor="#888888"
+            android:paddingBottom="16dp" />
+
+        <!-- 역할 선택 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="역할 선택"
+            android:textStyle="bold"
+            android:layout_marginTop="8dp" />
+
+        <RadioGroup
+            android:id="@+id/rg_role"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:id="@+id/rb_slave"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Slave (수신 중계)"
+                android:checked="true" />
+
+            <RadioButton
+                android:id="@+id/rb_master"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Master (수집 허브)" />
+        </RadioGroup>
+
+        <!-- 기기 ID -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="기기 고유 ID"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp" />
+
+        <EditText
+            android:id="@+id/et_device_id"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="예: slave-phone-01"
+            android:singleLine="true" />
+
+        <!-- 설정 저장 -->
+        <Button
+            android:id="@+id/btn_save_settings"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="설정 저장"
+            android:layout_marginTop="20dp" />
+
+        <!-- 서비스 시작/중지 -->
+        <Button
+            android:id="@+id/btn_toggle_service"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="서비스 시작"
+            android:layout_marginTop="8dp" />
+
+        <!-- 상태 표시 -->
+        <TextView
+            android:id="@+id/tv_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="상태: 서비스 중지됨"
+            android:textSize="13sp"
+            android:gravity="center"
+            android:padding="8dp" />
+
+        <!-- Master 패널: Master 모드일 때만 표시 -->
+        <LinearLayout
+            android:id="@+id/layout_master_panel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#E0E0E0"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="SMS 발송 명령"
+                android:textStyle="bold"
+                android:textSize="16sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="대상 Slave 기기 ID"
+                android:textStyle="bold"
+                android:layout_marginTop="12dp" />
+
+            <EditText
+                android:id="@+id/et_target_device"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="예: slave-phone-01"
+                android:singleLine="true"
+                android:inputType="text" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="수신자 번호"
+                android:textStyle="bold"
+                android:layout_marginTop="12dp" />
+
+            <EditText
+                android:id="@+id/et_to"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="예: 01012345678"
+                android:singleLine="true"
+                android:inputType="phone" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="메시지 내용"
+                android:textStyle="bold"
+                android:layout_marginTop="12dp" />
+
+            <EditText
+                android:id="@+id/et_message"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="발송할 메시지를 입력하세요"
+                android:minLines="3"
+                android:maxLines="6"
+                android:gravity="top|start"
+                android:inputType="textMultiLine" />
+
+            <Button
+                android:id="@+id/btn_send_command"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="발송 명령 전송"
+                android:layout_marginTop="12dp" />
+
+            <TextView
+                android:id="@+id/tv_command_result"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="13sp"
+                android:gravity="center"
+                android:padding="8dp"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+        <!-- 로그아웃 버튼 -->
+        <Button
+            android:id="@+id/btn_logout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="로그아웃"
+            android:layout_marginTop="24dp"
+            android:backgroundTint="#FF5252" />
+
+    </LinearLayout>
+
+</ScrollView>

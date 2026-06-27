@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.workez365.smsbridge">
+
+    <!-- SMS / 통화 권한 -->
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    <uses-permission android:name="android.permission.SEND_SMS" />
+    <uses-permission android:name="android.permission.READ_SMS" />
+    <!-- [fix-3] 기본 SMS 앱 후보로 등록하려면 MMS 수신 권한도 필요 -->
+    <uses-permission android:name="android.permission.RECEIVE_MMS" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+
+    <!-- 네트워크 / 서비스 -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.SMSBridge">
+
+        <!-- 런처 진입점 -->
+        <activity
+            android:name=".LoginActivity"
+            android:exported="true"
+            android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="false"
+            android:launchMode="singleTop" />
+
+        <!--
+            [fix-3] Play Store SMS 권한 정책 준수를 위해 기본 SMS 앱으로 등록 가능해야 함.
+            기본 SMS 앱 후보가 되려면 아래 4가지 컴포넌트가 반드시 선언되어야 함:
+            1) SMS_DELIVER 수신 Receiver
+            2) WAP_PUSH_DELIVER 수신 Receiver
+            3) RESPOND_VIA_MESSAGE 처리 Activity
+            4) HeadlessSmsSendService (Android 11+ 선택사항이나 권장)
+
+            SMS_RECEIVED vs SMS_DELIVER:
+            - SMS_RECEIVED: 모든 앱이 받음 (브로드캐스트), 기본 SMS 앱 여부 무관
+            - SMS_DELIVER: 기본 SMS 앱으로 지정된 앱만 받음 (단독 수신)
+            두 인텐트를 모두 등록하여 기본 앱일 때와 아닐 때 모두 SMS를 수신함.
+        -->
+
+        <!-- 기본 SMS 앱이 아닐 때 수신 (기존 방식, 우선순위 높음) -->
+        <receiver
+            android:name=".SmsReceiver"
+            android:exported="true"
+            android:permission="android.permission.BROADCAST_SMS">
+            <intent-filter android:priority="999">
+                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+            </intent-filter>
+            <!-- [fix-3] 기본 SMS 앱으로 지정됐을 때 수신하는 인텐트 -->
+            <intent-filter android:priority="999">
+                <action android:name="android.provider.Telephony.SMS_DELIVER" />
+            </intent-filter>
+        </receiver>
+
+        <!-- [fix-3] 기본 SMS 앱 후보 요건: WAP(MMS) 수신 처리 -->
+        <receiver
+            android:name=".MmsReceiver"
+            android:exported="true"
+            android:permission="android.permission.BROADCAST_WAP_PUSH">
+            <intent-filter>
+                <action android:name="android.provider.Telephony.WAP_PUSH_DELIVER" />
+                <data android:mimeType="application/vnd.wap.mms-message" />
+            </intent-filter>
+        </receiver>
+
+        <!-- 부팅 완료 후 서비스 자동 재시작 -->
+        <receiver
+            android:name=".BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!--
+            [fix-3] 기본 SMS 앱 후보 요건: 빠른 답장(RESPOND_VIA_MESSAGE) 처리 Activity
+            이 Activity가 없으면 시스템이 앱을 기본 SMS 앱으로 설정해 주지 않음.
+        -->
+        <activity
+            android:name=".RespondViaSmsActivity"
+            android:exported="true"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.RESPOND_VIA_MESSAGE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="smsto" />
+            </intent-filter>
+        </activity>
+
+        <!-- 포그라운드 서비스 (Firestore 리스너 상주) -->
+        <service
+            android:name=".SmsBridgeService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
+        <!-- FCM 메시지 수신 서비스 -->
+        <service
+            android:name=".SmsBridgeMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <!--
+            [fix-3] 기본 SMS 앱 후보 요건: HeadlessSmsSendService
+            Android 11+에서 기본 앱 전환 없이 SMS 발송 시 시스템이 이 서비스를 호출함.
+        -->
+        <service
+            android:name=".HeadlessSmsSendService"
+            android:exported="true"
+            android:permission="android.permission.SEND_RESPOND_VIA_MESSAGE">
+            <intent-filter>
+                <action android:name="android.intent.action.RESPOND_VIA_MESSAGE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="smsto" />
+            </intent-filter>
+        </service>
+
+    </application>
+
+</manifest>

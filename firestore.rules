@@ -1,0 +1,55 @@
+// ================================================================
+// Firebase Console → Firestore Database → Rules 탭에 붙여넣기
+// ================================================================
+//
+// 핵심 규칙: 로그인한 유저는 자신의 uid 경로 아래 데이터만 읽기/쓰기 가능
+// 유저1(uid-A)은 유저2(uid-B)의 /users/uid-B/... 에 절대 접근 불가
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // /users/{userId}/** 모든 하위 경로에 적용
+    match /users/{userId}/{document=**} {
+
+      // 읽기: 본인 uid 경로만 허용
+      allow read: if request.auth != null
+                  && request.auth.uid == userId;
+
+      // 쓰기 규칙을 컬렉션별로 세분화
+      // sms_inbox: Slave 앱이 수신 SMS를 업로드 (create만 허용, 삭제 불가)
+      match /sms_inbox/{msgId} {
+        allow create: if request.auth != null
+                      && request.auth.uid == userId
+                      && request.resource.data.keys().hasAll(['device_id','sender','body','received_at','read']);
+        allow update: if request.auth != null
+                      && request.auth.uid == userId
+                      && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+        allow delete: if false; // SMS 기록은 앱에서 삭제 불가 (콘솔에서만 삭제)
+      }
+
+      // sms_commands: Master가 발송 명령을 추가, Slave가 상태를 업데이트
+      match /sms_commands/{cmdId} {
+        allow create: if request.auth != null
+                      && request.auth.uid == userId
+                      && request.resource.data.keys().hasAll(['target_device_id','to','message','status','created_at'])
+                      && request.resource.data.status == 'pending';
+        allow update: if request.auth != null
+                      && request.auth.uid == userId
+                      && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','processed_at']);
+        allow delete: if false;
+      }
+
+      // devices: 기기 정보 + FCM 토큰 (본인만 읽기/쓰기)
+      match /devices/{deviceId} {
+        allow read, write: if request.auth != null
+                           && request.auth.uid == userId;
+      }
+    }
+
+    // 그 외 모든 경로 차단
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
