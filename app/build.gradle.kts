@@ -13,8 +13,8 @@ android {
         applicationId = "com.workez365.smsbridge"
         minSdk = 26          // Android 8.0 이상 (NotificationChannel 필수 API)
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
     }
 
     buildTypes {
